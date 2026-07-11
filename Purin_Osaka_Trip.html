@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍮 폼폼푸린과 함께하는 일본 여행 🐾</title>
+    <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            /* 오직 폼폼푸린 컬러만 사용! */
+            --bg-page: #FFF5D1;
+            /* 커스터드 푸딩 바탕색 */
+            --bg-card: #FFFFFF;
+            /* 지도 컨테이너 배경 */
+            --bg-list: #FFFFFF;
+            /* 리스트 배경 */
+            --hover-list: #FFF9E6;
+            /* 리스트 호버 */
+
+            --text-main: #5C3A21;
+            /* 푸린이 베레모 색상 (진갈색) */
+            --text-sub: #402d1c;
+            /* 서브 텍스트 (연갈색) */
+            --border-color: #FFA6C9;
+            /* 푸린이 노란색 테두리 */
+
+            /* Day별 테마 컬러 (푸린이 테마로 통일) */
+            --day1-color: #FFA6C9;
+            /* 마이멜로디 핑크 */
+            --day2-color: #98DDCA;
+            /* 포차코 민트 */
+            --day3-color: #8EB8E5;
+            /* 시나모롤 소다 블루 */
+            --day4-color: #CBAACB;
+            /* 쿠로미 라벤더 */
+
+            --purin-yellow: #FDE162;
+            --purin-brown: #5C3A21;
+        }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 상단 헤더 */
+        .header-section {
+            text-align: center;
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        /* 폼폼푸린 타이틀 이미지 스타일 */
+        .header-purin-img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid var(--purin-brown);
+            margin-bottom: 10px;
+            background-color: white;
+            box-shadow: 0 4px 10px rgba(92, 58, 33, 0.2);
+        }
+
+        .header-section h1 {
+            font-size: 26px;
+            font-weight: 800;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: var(--purin-brown);
+        }
+
+        .header-section p {
+            font-size: 14px;
+            color: var(--text-sub);
+            margin: 0 0 20px 0;
+            font-weight: 600;
+        }
+
+        /* 알약 버튼들 (필터) */
+        .top-filters {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 2px solid transparent;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            color: var(--text-main);
+            background: #FFFFFF;
+            box-shadow: 0 4px 10px rgba(92, 58, 33, 0.08);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(92, 58, 33, 0.12);
+        }
+
+        .filter-btn::before {
+            content: '●';
+            font-size: 12px;
+        }
+
+        /* 폼폼푸린 컬러 버튼 세팅 */
+        #btn-all::before {
+            color: var(--purin-brown);
+        }
+
+        #btn-all.active {
+            background: var(--purin-yellow);
+            border-color: var(--purin-brown);
+            color: var(--purin-brown);
+        }
+
+        #btn-day1::before {
+            color: var(--day1-color);
+            text-shadow: 0 0 1px #000;
+        }
+
+        #btn-day1.active {
+            background: var(--day1-color);
+            color: var(--purin-brown);
+            border-color: var(--purin-brown);
+        }
+
+        #btn-day2::before {
+            color: var(--day2-color);
+        }
+
+        #btn-day2.active {
+            background: var(--day2-color);
+            color: #fff;
+            border-color: var(--purin-brown);
+        }
+
+        #btn-day3::before {
+            color: var(--day3-color);
+        }
+
+        #btn-day3.active {
+            background: var(--day3-color);
+            color: #fff;
+            border-color: var(--purin-brown);
+        }
+
+        #btn-day4::before {
+            color: var(--day4-color);
+        }
+
+        #btn-day4.active {
+            background: var(--day4-color);
+            color: #fff;
+            border-color: var(--purin-brown);
+        }
+
+        /* 동글동글해진 메인 컨테이너 */
+        .app-wrapper {
+            width: 100%;
+            max-width: 1100px;
+            height: 650px;
+            display: flex;
+            background: var(--bg-card);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 16px 40px rgba(92, 58, 33, 0.15);
+            border: 4px solid var(--purin-brown);
+            /* 푸린이 느낌 확 나는 굵은 갈색 테두리 */
+            position: relative;
+        }
+
+        /* 왼쪽 지도 영역 */
+        #map-container {
+            flex: 1.4;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 오른쪽 리스트 영역 */
+        #list-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-list);
+            border-left: 1px solid var(--purin-brown);
+            position: relative;
+        }
+
+        /* 둥둥 떠있는 폼폼푸린 장식 이미지 */
+        .floating-purin {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 100px;
+            z-index: 1000;
+            pointer-events: none;
+            /* 클릭 방해 안 함 */
+            filter: drop-shadow(0px 5px 5px rgba(92, 58, 33, 0.2));
+        }
+
+        .list-header {
+            padding: 22px;
+            border-bottom: 2px solid var(--purin-brown);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 800;
+            font-size: 16px;
+            color: var(--purin-brown);
+        }
+
+        .places-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            padding-bottom: 120px;
+
+        }
+
+        /* 귀여운 스크롤바 */
+        .places-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .places-list::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+            border-radius: 10px;
+            border: 1px solid var(--purin-brown);
+        }
+
+        /* 리스트 아이템 디자인 */
+        .place-item {
+            display: flex;
+            align-items: center;
+            padding: 18px 22px;
+            border-bottom: 1px dashed var(--purin-yellow);
+            cursor: pointer;
+            transition: background 0.2s;
+            gap: 15px;
+        }
+
+        .place-item:hover {
+            background: var(--hover-list);
+        }
+
+        /* 마커 숫자 아이콘 */
+        .marker-icon {
+            min-width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 900;
+            color: var(--purin-brown);
+            border: 2px solid var(--purin-brown);
+            box-shadow: 0 3px 0 var(--purin-brown);
+        }
+
+        .place-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .place-name {
+            font-weight: 800;
+            font-size: 15px;
+            color: var(--text-main);
+        }
+
+        .place-desc {
+            font-size: 12px;
+            color: var(--text-sub);
+            font-weight: 600;
+        }
+
+        /* 구글맵 바로가기 버튼 */
+        .gmap-link {
+            font-size: 11px;
+            color: var(--purin-brown);
+            text-decoration: none;
+            font-weight: 800;
+            padding: 6px 10px;
+            border-radius: 12px;
+            background: var(--purin-yellow);
+            border: 2px solid var(--purin-brown);
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .gmap-link:hover {
+            background: #FCE883;
+            transform: scale(1.05);
+        }
+
+        /* 커스텀 팝업 디자인 */
+        .leaflet-popup-content-wrapper {
+            background: var(--bg-card);
+            color: var(--text-main);
+            border-radius: 16px;
+            border: 2px solid var(--purin-brown);
+            box-shadow: 0 4px 15px rgba(92, 58, 33, 0.2);
+        }
+
+        .leaflet-popup-tip {
+            background: var(--bg-card);
+        }
+
+        .leaflet-popup-content {
+            font-family: 'Pretendard', sans-serif;
+            margin: 14px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 15px 10px;
+            }
+
+            .app-wrapper {
+                flex-direction: column;
+                height: 85vh;
+                border-radius: 20px;
+            }
+
+            #map-container {
+                flex: 1;
+                border-left: none;
+                border-bottom: 4px solid var(--purin-brown);
+            }
+
+            #list-panel {
+                flex: 1;
+                border-left: none;
+            }
+
+            .floating-purin {
+                width: 80px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header-section">
+
+        <!-- 🚨 여기에 구글에서 복사한 푸린이 얼굴 이미지 주소를 넣으세요! 🚨 -->
+        <img src="http://sanriokorea.co.kr/wp-content/themes/sanrio/images/n_pompompurin.png" alt="푸린이"
+            class="header-purin-img" onerror="this.style.display='none'">
+
+        <h1>🍮 Japan 여행 야호 🐾</h1>
+        <p>오사카 - 교토 - 고베 - 난바 폼폼푸린과 레츠 꼬 💛</p>
+
+        <div class="top-filters" id="top-filters">
+            <button class="filter-btn active" id="btn-all" onclick="filterDay('all')">전체 일정</button>
+            <button class="filter-btn" id="btn-day1" onclick="filterDay(0)">DAY 1</button>
+            <button class="filter-btn" id="btn-day2" onclick="filterDay(1)">DAY 2</button>
+            <button class="filter-btn" id="btn-day3" onclick="filterDay(2)">DAY 3</button>
+            <button class="filter-btn" id="btn-day4" onclick="filterDay(3)">DAY 4</button>
+        </div>
+    </div>
+
+    <div class="app-wrapper">
+        <div id="map-container">
+            <img src="https://item.kakaocdn.net/do/da113e63d8d76d0e0e72adfb8b6d03bd8f324a0b9c48f77dbce3a43bd11ce785"
+                alt="둥둥 푸린" class="floating-purin" onerror="this.style.display='none'">
+            <div id="map"></div>
+        </div>
+
+        <div id="list-panel">            
+
+            <div class="list-header">
+                <span>📍 장소 목록</span>
+                <span id="place-count" style="color: var(--text-sub); font-size: 13px; font-weight: 700;">총 0곳</span>
+            </div>
+            <ul class="places-list" id="places-list">
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 1. 일정 데이터 (기존과 완벽 동일)
+        const tripData = [
+            {
+                dayNum: 1, title: "우메다", color: "var(--day1-color)", textColor: "var(--purin-brown)",
+                places: [
+                    { name: "간사이 공항", desc: "오사카 도착", lat: 34.4320, lng: 135.2304 },
+                    { name: "MERBABU STAY OSAKA", desc: "숙소", lat: 34.6850, lng: 135.5080 },
+                    { name: "우메키타 공원", desc: "공원", lat: 34.7050, lng: 135.4930 },
+                    { name: "15-34 Chayamachi", desc: "가챠가챠", lat: 34.7075, lng: 135.5000 },
+                    { name: "키디랜드 오사카 우메다점", desc: "캐릭터 굿즈", lat: 34.7065, lng: 135.4980 },
+                    { name: "Sanrio Vivitix HEP FIVE", desc: "싼리오!!!! 푸리닝", lat: 34.7039, lng: 135.5002 },
+                    { name: "우메다 스카이빌딩", desc: "야경", lat: 34.7053, lng: 135.4896 },
+                    { name: "MERBABU STAY OSAKA", desc: "숙소 복귀", lat: 34.6850, lng: 135.5080 }
+                ]
+            },
+            {
+                dayNum: 2, title: "교토 히가시야마", color: "var(--day2-color)", textColor: "#ffffff",
+                places: [
+                    { name: "MERBABU STAY OSAKA", desc: "일정 시작", lat: 34.6850, lng: 135.5080 },
+                    { name: "오사카 역", desc: "이동", lat: 34.7024, lng: 135.4959 },
+                    { name: "교토 역", desc: "이동", lat: 34.9858, lng: 135.7587 },
+                    { name: "기요미즈데라", desc: "청수사", lat: 34.9948, lng: 135.7850 },
+                    { name: "산넨자카", desc: "전통 거리", lat: 34.9965, lng: 135.7820 },
+                    { name: "니넨자카", desc: "전통 거리", lat: 34.9995, lng: 135.7818 },
+                    { name: "야사카 신사", desc: "신사", lat: 35.0036, lng: 135.7785 },
+                    { name: "텐쥬안", desc: "정원", lat: 35.0105, lng: 135.7937 },
+                    { name: "하나미코지 도리", desc: "기온 거리", lat: 35.0030, lng: 135.7745 },
+                    { name: "Gion Nanba", desc: "밥 집", lat: 35.0037, lng: 135.7735 },
+                    { name: "가모가와 노료유카", desc: "강변 야경!!!", lat: 35.0040, lng: 135.7715 },
+                    { name: "MERBABU STAY OSAKA", desc: "숙소 복귀", lat: 34.6850, lng: 135.5080 }
+                ]
+            },
+            {
+                dayNum: 3, title: "난바/고베", color: "var(--day3-color)", textColor: "#ffffff",
+                places: [
+                    { name: "MERBABU STAY OSAKA", desc: "일정 시작", lat: 34.6850, lng: 135.5080 },
+                    { name: "오사카난바역", desc: "이동", lat: 34.6672, lng: 135.4998 },
+                    { name: "돈키호테 도톤보리미도스지점", desc: "쇼핑", lat: 34.6687, lng: 135.5021 },
+                    { name: "마메시바 카페 오사카점", desc: "시바견 보러가자 !!! 카페", lat: 34.6682, lng: 135.5015 },
+                    { name: "#C-pla 오사카 신사이바시스지 미나미점 1호관", desc: "가챠가챠", lat: 34.6710, lng: 135.5011 },
+                    { name: "MERBABU STAY OSAKA", desc: "숙소 짐 떨구기", lat: 34.6850, lng: 135.5080 },
+                    { name: "나니와바시 역", desc: "이동 - 유럽풍 광장", lat: 34.6930, lng: 135.5057 },
+                    { name: "피피네라 키친", desc: "고앵이 카페 - 선택사항 (오후 5시까지)", lat: 34.7070, lng: 135.5060 },
+                    { name: "오사카 역", desc: "이동", lat: 34.7024, lng: 135.4959 },
+                    { name: "Kobe Station", desc: "오후 6시반 ~ 7시", lat: 34.6797, lng: 135.1783 },
+                    { name: "Kobe Gas-Light St.", desc: "가스등 거리", lat: 34.6800, lng: 135.1810 },
+                    { name: "도토리 공화국 고베모자이크점", desc: "지브리 샵 !!", lat: 34.6826, lng: 135.1867 },
+                    { name: "메리켄 파크", desc: "오후 7시반 불꽃놀이", lat: 34.6826, lng: 135.1880 },
+                    { name: "MERBABU STAY OSAKA", desc: "숙소 복귀", lat: 34.6850, lng: 135.5080 }
+                ]
+            },
+            {
+                dayNum: 4, title: "출국", color: "var(--day4-color)", textColor: "#ffffff",
+                places: [
+                    { name: "MERBABU STAY OSAKA", desc: "체크아웃", lat: 34.6850, lng: 135.5080 },
+                    { name: "린쿠우 마부루 비치", desc: "해변", lat: 34.4072, lng: 135.2974 },
+                    { name: "간사이 국제공항", desc: "오전 11시 비행기", lat: 34.4320, lng: 135.2304 }
+                ]
+            }
+        ];
+
+        // 2. 밝은 일반 구글 지도로 변경
+        const map = L.map('map', { zoomControl: false }).setView([34.6937, 135.5023], 10);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        L.tileLayer('https://mt1.google.com/vt/lyrs=m&hl=ko&x={x}&y={y}&z={z}', {
+            attribution: '© Google Maps',
+            maxZoom: 20
+        }).addTo(map);
+
+        let currentMarkers = [];
+        let currentPolylines = [];
+
+        // 3. 화면 렌더링 함수
+        function renderMap(filterIndex) {
+            currentMarkers.forEach(m => map.removeLayer(m));
+            currentPolylines.forEach(p => map.removeLayer(p));
+            currentMarkers = [];
+            currentPolylines = [];
+
+            const placesList = document.getElementById('places-list');
+            placesList.innerHTML = '';
+
+            let allCoords = [];
+            let totalPlacesCount = 0;
+
+            const daysToRender = filterIndex === 'all' ? tripData : [tripData[filterIndex]];
+
+            daysToRender.forEach((data) => {
+                const dayCoords = [];
+
+                data.places.forEach((place, index) => {
+                    totalPlacesCount++;
+                    const latLng = [place.lat, place.lng];
+                    dayCoords.push(latLng);
+                    allCoords.push(latLng);
+
+                    // 지도 마커 (푸린 스타일로 둥글고 귀엽게)
+                    const customIcon = L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div style="background-color: ${data.color}; width: 24px; height: 24px; border-radius: 50%; color: ${data.textColor}; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; border: 2px solid var(--purin-brown); box-shadow: 0 3px 0 var(--purin-brown);">${index + 1}</div>`,
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 15]
+                    });
+
+                    const marker = L.marker(latLng, { icon: customIcon }).addTo(map)
+                        .bindPopup(`<b style="color:var(--purin-brown); font-size:15px;">${place.name}</b><br><span style="color:var(--text-sub);">DAY ${data.dayNum} - ${place.desc}</span>`);
+                    currentMarkers.push(marker);
+
+                    const gmapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}`;
+
+                    // 우측 리스트 아이템
+                    const li = document.createElement('li');
+                    li.className = 'place-item';
+                    li.innerHTML = `
+                        <div class="marker-icon" style="background-color: ${data.color}; color: ${data.textColor};">${index + 1}</div>
+                        <div class="place-info">
+                            <div class="place-name">${place.name}</div>
+                            <div class="place-desc">DAY ${data.dayNum} · ${place.desc}</div>
+                        </div>
+                        <a href="${gmapUrl}" target="_blank" class="gmap-link" onclick="event.stopPropagation();">지도 보기 ➔</a>
+                    `;
+
+                    li.addEventListener('click', () => {
+                        map.flyTo(latLng, 16, { animate: true, duration: 1.2 });
+                        setTimeout(() => marker.openPopup(), 1200);
+                    });
+
+                    placesList.appendChild(li);
+                });
+
+                // 해당 날짜 경로 선 (동글동글한 느낌의 점선)
+                const polyline = L.polyline(dayCoords, {
+                    color: data.color,
+                    weight: 4,
+                    opacity: 0.9,
+                    dashArray: '8, 8'
+                }).addTo(map);
+                currentPolylines.push(polyline);
+            });
+
+            document.getElementById('place-count').innerText = `총 ${totalPlacesCount}곳`;
+
+            if (allCoords.length > 0) {
+                map.fitBounds(L.latLngBounds(allCoords), { padding: [40, 40], animate: true, duration: 1 });
+            }
+        }
+
+        function filterDay(index) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+
+            if (index === 'all') document.getElementById('btn-all').classList.add('active');
+            else document.getElementById(`btn-day${index + 1}`).classList.add('active');
+
+            renderMap(index);
+        }
+
+        renderMap('all');
+
+    </script>
+</body>
+
+</html>
