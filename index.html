@@ -439,6 +439,18 @@
             <ul class="places-list" id="places-list">
             </ul>
         </div>
+
+        <div id="add-place-form" style="display: none; padding: 15px 22px; background: #FFF9E6; border-bottom: 2px dashed var(--purin-brown);">
+            <div style="font-size: 13px; font-weight: 800; color: var(--purin-brown); margin-bottom: 8px;">🌟 나만의 장소 추가하기</div>
+            <input type="text" id="new-name" placeholder="장소 이름 (예: 유니버셜 스튜디오)" style="width: 100%; box-sizing: border-box; padding: 8px; margin-bottom: 8px; border: 2px solid var(--purin-brown); border-radius: 8px; font-family: 'Pretendard';">
+            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                <input type="number" id="new-lat" placeholder="위도 (예: 34.6654)" style="width: 50%; box-sizing: border-box; padding: 8px; border: 2px solid var(--purin-brown); border-radius: 8px; font-family: 'Pretendard';">
+                <input type="number" id="new-lng" placeholder="경도 (예: 135.4323)" style="width: 50%; box-sizing: border-box; padding: 8px; border: 2px solid var(--purin-brown); border-radius: 8px; font-family: 'Pretendard';">
+            </div>
+            <button onclick="addNewPlace()" style="width: 100%; padding: 8px; background: var(--purin-yellow); border: 2px solid var(--purin-brown); border-radius: 8px; font-weight: 800; color: var(--purin-brown); cursor: pointer; box-shadow: 0 2px 0 var(--purin-brown);">여기에 추가할래! 🐾</button>
+            <div style="font-size: 11px; color: var(--text-sub); margin-top: 8px; line-height: 1.4;">
+            </div>
+        </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -509,6 +521,42 @@
             }
 
         ];
+        
+        const savedPlaces = JSON.parse(localStorage.getItem('myPurinPlaces')) || [];
+        if (savedPlaces.length > 0) {
+            tripData[4].places = [...tripData[4].places, ...savedPlaces];
+        }
+
+        function addNewPlace() {
+            const nameInput = document.getElementById('new-name').value;
+            const latInput = parseFloat(document.getElementById('new-lat').value);
+            const lngInput = parseFloat(document.getElementById('new-lng').value);
+
+            if (!nameInput || isNaN(latInput) || isNaN(lngInput)) {
+                alert('장소 이름, 위도, 경도를 모두 입력해 주세요! 🍮');
+                return;
+            }
+
+            const newPlace = {
+                name: nameInput,
+                desc: "내가 찜한 곳 💛",
+                lat: latInput,
+                lng: lngInput
+            };
+
+            tripData[4].places.push(newPlace);
+
+            const currentSaved = JSON.parse(localStorage.getItem('myPurinPlaces')) || [];
+            currentSaved.push(newPlace);
+            localStorage.setItem('myPurinPlaces', JSON.stringify(currentSaved));
+
+            document.getElementById('new-name').value = '';
+            document.getElementById('new-lat').value = '';
+            document.getElementById('new-lng').value = '';
+
+            renderMap(4);
+        }
+
 
         const map = L.map('map', { zoomControl: false }).setView([34.6937, 135.5023], 10);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -522,6 +570,9 @@
         let currentPolylines = [];
 
         function renderMap(filterIndex) {
+
+            const addForm = document.getElementById('add-place-form');
+            if (addForm) addForm.style.display = (filterIndex === 4) ? 'block' : 'none';
             currentMarkers.forEach(m => map.removeLayer(m));
             currentPolylines.forEach(p => map.removeLayer(p));
             currentMarkers = [];
@@ -595,13 +646,16 @@
         function filterDay(index) {
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
 
-            if (index === 'all') document.getElementById('btn-all').classList.add('active');
-            else document.getElementById(`btn-day${index + 1}`).classList.add('active');
+            if (index === 'all') {
+                document.getElementById('btn-all').classList.add('active');
+            } else if (index === 4) {
+                document.getElementById('btn-extra').classList.add('active');
+            } else {
+                document.getElementById(`btn-day${index + 1}`).classList.add('active');
+            }
 
             renderMap(index);
         }
-
-        renderMap('all');
 
         function createPetal() {
             const container = document.getElementById('sakura-container');
