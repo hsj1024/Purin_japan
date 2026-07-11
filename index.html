@@ -344,6 +344,19 @@
             user-select: none;
         }
 
+        .search-result-item {
+            padding: 10px 14px;
+            border-bottom: 1px dashed var(--purin-yellow);
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-main);
+            transition: background 0.2s;
+            text-align: left;
+            line-height: 1.4;
+        }
+        .search-result-item:hover { background: #FFF9E6; }
+        .search-result-item:last-child { border-bottom: none; }
+
         @keyframes fall {
             0% {
                 top: -10vh;
@@ -440,15 +453,17 @@
             </ul>
         </div>
 
-        <div id="add-place-form" style="display: none; padding: 15px 22px; background: #FFF9E6; border-bottom: 2px dashed var(--purin-brown);">
-            <div style="font-size: 13px; font-weight: 800; color: var(--purin-brown); margin-bottom: 8px;">🌟 나만의 장소 추가하기</div>
-            <input type="text" id="new-name" placeholder="장소 이름 (예: 유니버셜 스튜디오)" style="width: 100%; box-sizing: border-box; padding: 8px; margin-bottom: 8px; border: 2px solid var(--purin-brown); border-radius: 8px; font-family: 'Pretendard';">
-            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                <input type="number" id="new-lat" placeholder="위도 (예: 34.6654)" style="width: 50%; box-sizing: border-box; padding: 8px; border: 2px solid var(--purin-brown); border-radius: 8px; font-family: 'Pretendard';">
-                <input type="number" id="new-lng" placeholder="경도 (예: 135.4323)" style="width: 50%; box-sizing: border-box; padding: 8px; border: 2px solid var(--purin-brown); border-radius: 8px; font-family: 'Pretendard';">
+        <div id="add-place-form" style="display: none; padding: 15px 22px; background: #FFF9E6; border-bottom: 2px dashed var(--purin-brown); position: relative;">
+            <div style="font-size: 13px; font-weight: 800; color: var(--purin-brown); margin-bottom: 8px;">🌟 장소 검색해서 찜하기</div>
+            
+            <div style="position: relative;">
+                <input type="text" id="place-search" placeholder="검색어 입력 (예: 유니버셜 스튜디오)" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border: 2px solid var(--purin-brown); border-radius: 8px; font-family: 'Pretendard'; font-size: 14px; outline: none;">
+                
+                <ul id="search-results" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid var(--purin-brown); border-radius: 8px; margin-top: 4px; padding: 0; list-style: none; max-height: 200px; overflow-y: auto; z-index: 1001; box-shadow: 0 4px 15px rgba(92,58,33,0.15);"></ul>
             </div>
-            <button onclick="addNewPlace()" style="width: 100%; padding: 8px; background: var(--purin-yellow); border: 2px solid var(--purin-brown); border-radius: 8px; font-weight: 800; color: var(--purin-brown); cursor: pointer; box-shadow: 0 2px 0 var(--purin-brown);">여기에 추가할래! 🐾</button>
+
             <div style="font-size: 11px; color: var(--text-sub); margin-top: 8px; line-height: 1.4;">
+                * 한국어, 영어, 일본어로 검색 후 목록에서 누르면 바로 추가됩니다! 🐾
             </div>
         </div>
     </div>
@@ -527,21 +542,63 @@
             tripData[4].places = [...tripData[4].places, ...savedPlaces];
         }
 
-        function addNewPlace() {
-            const nameInput = document.getElementById('new-name').value;
-            const latInput = parseFloat(document.getElementById('new-lat').value);
-            const lngInput = parseFloat(document.getElementById('new-lng').value);
+        let searchTimeout = null;
 
-            if (!nameInput || isNaN(latInput) || isNaN(lngInput)) {
-                alert('장소 이름, 위도, 경도를 모두 입력해 주세요! 🍮');
+        document.getElementById('place-search').addEventListener('input', function(e) {
+            const query = e.target.value.trim();
+            const resultsContainer = document.getElementById('search-results');
+
+            if (query.length < 2) {
+                resultsContainer.style.display = 'none';
                 return;
             }
 
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&accept-language=ko&countrycodes=jp&limit=5`)
+                    .then(res => res.json())
+                    .then(data => {
+                        resultsContainer.innerHTML = '';
+                        
+                        if (data.length === 0) {
+                            resultsContainer.innerHTML = '<li style="padding: 10px; font-size: 13px; color: #999;">검색 결과가 없습니다 🥲</li>';
+                            resultsContainer.style.display = 'block';
+                            return;
+                        }
+
+                        data.forEach(item => {
+                            const li = document.createElement('li');
+                            li.className = 'search-result-item';
+                            
+                            const shortName = item.name || item.display_name.split(',')[0];
+                            
+                            li.innerHTML = `<b style="color:var(--purin-brown);">${shortName}</b><br><span style="font-size:11px; color:#888;">${item.display_name}</span>`;
+                            
+                            li.onclick = () => {
+                                addNewPlaceFromSearch(shortName, parseFloat(item.lat), parseFloat(item.lon));
+                                resultsContainer.style.display = 'none';
+                                document.getElementById('place-search').value = '';
+                            };
+                            resultsContainer.appendChild(li);
+                        });
+                        resultsContainer.style.display = 'block';
+                    })
+                    .catch(err => console.error('검색 오류:', err));
+            }, 500);
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#place-search') && !e.target.closest('#search-results')) {
+                document.getElementById('search-results').style.display = 'none';
+            }
+        });
+
+        function addNewPlaceFromSearch(name, lat, lng) {
             const newPlace = {
-                name: nameInput,
-                desc: "내가 찜한 곳 💛",
-                lat: latInput,
-                lng: lngInput
+                name: name,
+                desc: "내가 검색해서 찜한 곳 💛",
+                lat: lat,
+                lng: lng
             };
 
             tripData[4].places.push(newPlace);
@@ -550,13 +607,8 @@
             currentSaved.push(newPlace);
             localStorage.setItem('myPurinPlaces', JSON.stringify(currentSaved));
 
-            document.getElementById('new-name').value = '';
-            document.getElementById('new-lat').value = '';
-            document.getElementById('new-lng').value = '';
-
             renderMap(4);
         }
-
 
         const map = L.map('map', { zoomControl: false }).setView([34.6937, 135.5023], 10);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
