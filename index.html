@@ -393,6 +393,7 @@
                 overflow-x: auto;
                 justify-content: flex-start;
                 padding-bottom: 10px;
+                padding-left: 5px;
                 -webkit-overflow-scrolling: touch;
                 scrollbar-width: none;
             }
@@ -405,6 +406,10 @@
                 flex-shrink: 0; 
                 padding: 8px 15px; 
                 font-size: 13px;
+            }
+
+            .filter-btn:last-child {
+                margin-right: 20px; 
             }
         }
     </style>
@@ -449,11 +454,8 @@
                 <span>📍 장소 목록</span>
                 <span id="place-count" style="color: var(--text-sub); font-size: 13px; font-weight: 700;">총 0곳</span>
             </div>
-            <ul class="places-list" id="places-list">
-            </ul>
-        </div>
 
-        <div id="add-place-form" style="display: none; padding: 15px 22px; background: #FFF9E6; border-bottom: 2px dashed var(--purin-brown); position: relative;">
+            <div id="add-place-form" style="display: none; padding: 15px 22px; background: #FFF9E6; border-bottom: 2px dashed var(--purin-brown); position: relative;">
             <div style="font-size: 13px; font-weight: 800; color: var(--purin-brown); margin-bottom: 8px;">🌟 장소 검색해서 찜하기</div>
             
             <div style="position: relative;">
@@ -471,19 +473,36 @@
                 </div>
             </div>
 
-            <div style="text-align: right; margin-top: 8px;">
-                <span onclick="document.getElementById('link-input-box').style.display = 'block';" style="font-size: 11px; color: #6482ff; font-weight: 700; cursor: pointer; text-decoration: underline;">
-                    검색에 안 나오나요? 구글맵 링크로 추가하기 ➔
+            <div style="text-align: right; margin-top: 8px; line-height: 1.8;">
+                <span onclick="document.getElementById('link-input-box').style.display = 'block'; document.getElementById('manual-input-box').style.display = 'none';" style="font-size: 11px; color: #6482ff; font-weight: 700; cursor: pointer; text-decoration: underline; display: block;">
+                    🔗 검색에 안 나오나요? 링크만 담아둘래요 ➔
+                </span>
+                <span onclick="document.getElementById('manual-input-box').style.display = 'block'; document.getElementById('link-input-box').style.display = 'none';" style="font-size: 11px; color: #ff6b6b; font-weight: 700; cursor: pointer; text-decoration: underline; display: block;">
+                    📌 무조건 지도에 핀을 꽂을래요 (좌표 복붙) ➔
                 </span>
             </div>
 
             <div id="link-input-box" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--purin-brown);">
-                <div style="font-size: 12px; font-weight: 800; color: var(--purin-brown); margin-bottom: 8px;">🔗 구글맵 링크로 바로 추가하기</div>
+                <div style="font-size: 12px; font-weight: 800; color: var(--purin-brown); margin-bottom: 8px;">🔗 구글맵 링크만 리스트에 담기</div>
                 <input type="text" id="new-name-link" placeholder="장소 이름 (예: 모토무라 규카츠)" style="width: 100%; box-sizing: border-box; padding: 8px; margin-bottom: 8px; border: 2px solid var(--purin-brown); border-radius: 8px; font-family: 'Pretendard';">
-                <input type="text" id="new-link-url" placeholder="구글맵 '공유' 링크 붙여넣기" style="width: 100%; box-sizing: border-box; padding: 8px; margin-bottom: 8px; border: 2px solid var(--purin-brown); border-radius: 8px; font-family: 'Pretendard';">
-                <button onclick="addNewPlaceByLink()" style="width: 100%; padding: 8px; background: var(--purin-yellow); border: 2px solid var(--purin-brown); border-radius: 8px; font-weight: 800; color: var(--purin-brown); cursor: pointer; box-shadow: 0 2px 0 var(--purin-brown);">링크로 찜하기! 🐾</button>
+                <input type="text" id="new-link-url" placeholder="구글맵 '공유' 짧은 링크 붙여넣기" style="width: 100%; box-sizing: border-box; padding: 8px; margin-bottom: 8px; border: 2px solid var(--purin-brown); border-radius: 8px; font-family: 'Pretendard';">
+                <button onclick="addNewPlaceByLink()" style="width: 100%; padding: 8px; background: #FFF; border: 2px solid #6482ff; border-radius: 8px; font-weight: 800; color: #6482ff; cursor: pointer;">링크만 찜하기! (지도 표시X)</button>
+            </div>
+
+            <div id="manual-input-box" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--purin-brown);">
+                <div style="font-size: 12px; font-weight: 800; color: var(--purin-brown); margin-bottom: 8px;">📌 구글맵 좌표로 정확하게 핀 꽂기</div>
+                <input type="text" id="new-name-manual" placeholder="장소 이름 (직접 작성)" style="width: 100%; box-sizing: border-box; padding: 8px; margin-bottom: 8px; border: 2px solid var(--purin-brown); border-radius: 8px; font-family: 'Pretendard';">
+                <input type="text" id="new-coords-manual" placeholder="위도, 경도 복붙! (예: 34.665, 135.432)" style="width: 100%; box-sizing: border-box; padding: 8px; margin-bottom: 8px; border: 2px solid var(--purin-brown); border-radius: 8px; font-family: 'Pretendard';">
+                <button onclick="addNewPlaceManual()" style="width: 100%; padding: 8px; background: var(--purin-yellow); border: 2px solid var(--purin-brown); border-radius: 8px; font-weight: 800; color: var(--purin-brown); cursor: pointer; box-shadow: 0 2px 0 var(--purin-brown);">좌표로 확실히 찜하기! 🐾</button>
+                <div style="font-size: 11px; color: var(--text-sub); margin-top: 8px; line-height: 1.4;">
+                    * 구글맵에서 장소를 <b>꾹 누르면</b> 뜨는 좌표를 쉼표(,) 포함해서 한 번에 붙여넣으세요!
+                </div>
             </div>
         </div>
+        <ul class="places-list" id="places-list">
+        </ul>
+        </div>
+        
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -671,6 +690,36 @@
             document.getElementById('new-name-link').value = '';
             document.getElementById('new-link-url').value = '';
             document.getElementById('link-input-box').style.display = 'none';
+        }
+
+        function addNewPlaceManual() {
+            const nameInput = document.getElementById('new-name-manual').value.trim();
+            const coordsInput = document.getElementById('new-coords-manual').value.trim();
+
+            if (!nameInput || !coordsInput) {
+                alert('장소 이름과 좌표를 모두 확인해 주세요! 🍮');
+                return;
+            }
+
+            const coordsArray = coordsInput.split(',');
+            if (coordsArray.length < 2) {
+                alert('좌표 형식이 이상해요! 쉼표(,)가 포함된 구글맵 좌표를 그대로 넣어주세요. 🐾');
+                return;
+            }
+
+            const latInput = parseFloat(coordsArray[0].trim());
+            const lngInput = parseFloat(coordsArray[1].trim());
+
+            if (isNaN(latInput) || isNaN(lngInput)) {
+                alert('좌표에 문자가 섞여 있어요! 숫자만 잘 복사됐는지 확인해 주세요 🍮');
+                return;
+            }
+
+            addNewPlaceFromSearch(nameInput, latInput, lngInput, null);
+
+            document.getElementById('new-name-manual').value = '';
+            document.getElementById('new-coords-manual').value = '';
+            document.getElementById('manual-input-box').style.display = 'none';
         }
 
         const map = L.map('map', { zoomControl: false }).setView([34.6937, 135.5023], 10);
