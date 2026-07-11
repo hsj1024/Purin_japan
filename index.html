@@ -156,6 +156,12 @@
             border-color: var(--purin-brown);
         }
 
+        :root {
+            --extra-color: #FFA07A; /* 귤색 핑크 */
+        }
+        #btn-extra::before { color: var(--extra-color); text-shadow: 0 0 1px #000; }
+        #btn-extra.active { background: var(--extra-color); color: var(--purin-brown); border-color: var(--purin-brown); }
+
         .app-wrapper {
             width: 100%;
             max-width: 1100px;
@@ -413,6 +419,7 @@
             <button class="filter-btn" id="btn-day2" onclick="filterDay(1)">DAY 2</button>
             <button class="filter-btn" id="btn-day3" onclick="filterDay(2)">DAY 3</button>
             <button class="filter-btn" id="btn-day4" onclick="filterDay(3)">DAY 4</button>
+            <button class="filter-btn" id="btn-extra" onclick="filterDay(4)">🌟 후보지</button>
         </div>
     </div>
 
@@ -493,7 +500,14 @@
                     { name: "린쿠우 마부루 비치", desc: "해변", lat: 34.4072, lng: 135.2974 },
                     { name: "간사이 국제공항", desc: "오전 11시 비행기", lat: 34.4320, lng: 135.2304 }
                 ]
+            },
+            {
+                dayNum: "🌟", title: "가고 싶은 곳", color: "var(--extra-color)", textColor: "var(--purin-brown)",
+                places: [
+                    { name: "LIFE Sakaisuji Hommachi Store", desc: "대형 마트", lat: 34.6654, lng: 135.4323 },
+                ]
             }
+
         ];
 
         const map = L.map('map', { zoomControl: false }).setView([34.6937, 135.5023], 10);
